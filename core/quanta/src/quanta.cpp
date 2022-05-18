@@ -110,32 +110,24 @@ void quanta_app::exception_handler(std::string msg, std::string& err) {
     exit(1);
 }
 
-const char* quanta_app::get_environ(std::string k) {
+void quanta_app::set_environ(std::string k, std::string v) { 
     auto iter = m_environs.find(k);
-    if (iter == m_environs.end()) return nullptr;
-    return iter->second.c_str();
+    if (iter == m_environs.end()) {
+        m_environs[k] = v;
+    }
+}
+
+std::string quanta_app::get_environ(std::string k) {
+    auto iter = m_environs.find(k);
+    if (iter != m_environs.end()) {
+        return iter->second;
+    }
+    return "";
 }
 
 void quanta_app::load(int argc, const char* argv[]) {
-    //初始化lua
-    luakit::kit_state lua;
-    lua.set("platform", get_platform());
-    //设置默认参数
-    set_environ("QUANTA_SERVICE", "quanta");
-    set_environ("QUANTA_INDEX", "1");
-    //加载LUA配置
-    lua.set_function("set_env", [&](std::string k, std::string v) { 
-        m_environs[k] = v; 
-    });
-    lua.set_function("set_osenv", [&](std::string k, std::string v) {
-        m_environs[k] = v;
-        setenv(k.c_str(), v.c_str(), 1); 
-    });
-    lua.run_file(argv[1], [&](std::string err) {
-        exception_handler("load config err: ", err);
-    });
     //将启动参数转换成环境变量
-    for (int i = 2; i < argc; ++i) {
+    for (int i = 1; i < argc; ++i) {
         std::string argvi = argv[i];
         auto pos = argvi.find("=");
         if (pos != std::string::npos) {
@@ -145,6 +137,26 @@ void quanta_app::load(int argc, const char* argv[]) {
             set_environ(ekey, evalue);
         }
     }
+    //设置默认参数
+    set_environ("QUANTA_INDEX", "1");
+    set_environ("QUANTA_DAEMON", "0");
+    set_environ("QUANTA_ENTRY", argv[1]);
+    set_environ("QUANTA_SERVICE", "quanta");
+    set_environ("QUANTA_SANDBOX", "sandbox");
+    //加载LUA配置
+    luakit::kit_state lua;
+    lua.set("platform", get_platform());
+    lua.set_function("set_env", [&](std::string k, std::string v) { 
+        m_environs[k] = v;
+    });
+    lua.set_function("set_osenv", [&](std::string k, std::string v) {
+        m_environs[k] = v;
+        setenv(k.c_str(), v.c_str(), 1); 
+    });
+    std::string entry = get_environ("QUANTA_ENTRY");
+    lua.run_file(entry, [&](std::string err) {
+        exception_handler("load config err: ", err);
+    });
     lua.close();
 }
 
