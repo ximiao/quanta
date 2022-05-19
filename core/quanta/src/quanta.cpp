@@ -10,7 +10,10 @@
 #if WIN32
 #include <conio.h>
 #include <windows.h>
-#define setenv(k,v,o) _putenv_s(k, v);
+int setenv(const char* k, const char* v, int o) {
+	if (!o && getenv(k)) return 0;
+	return _putenv_s(k, v);
+}
 #else
 #include <fcntl.h>
 #include <unistd.h>
@@ -34,7 +37,7 @@ static const char* get_platform() {
 #endif
 }
 
-static int quanta_daemon() {
+static int daemon() {
 #if defined(__linux) || defined(__APPLE__)
     pid_t pid = fork();
     if (pid != 0)
@@ -85,6 +88,17 @@ static int hash_code(lua_State* L) {
     return 1;
 }
 
+static int lset_env(lua_State* L) {
+    int overwrite = 0;
+    const char* key = lua_tostring(L, 1);
+    const char* value = lua_tostring(L, 2);
+    if (lua_gettop(L) > 2) {
+        overwrite = lua_tointeger(L, 3);
+    }
+    setenv(key, value, overwrite);
+    return 0;
+}
+
 void quanta_app::set_signal(uint32_t n) {
     uint32_t mask = 1 << n;
     m_signal |= mask;
@@ -99,6 +113,8 @@ void quanta_app::setup(int argc, const char* argv[]) {
     load(argc, argv);
     //运行
     run();
+    //通知logger
+    m_logger->stop();
 }
 
 void quanta_app::exception_handler(std::string msg, std::string& err) {
@@ -110,23 +126,11 @@ void quanta_app::exception_handler(std::string msg, std::string& err) {
     exit(1);
 }
 
-void quanta_app::set_environ(std::string k, std::string v) { 
-    auto iter = m_environs.find(k);
-    if (iter == m_environs.end()) {
-        m_environs[k] = v;
-    }
-}
-
-std::string quanta_app::get_environ(std::string k) {
-    auto iter = m_environs.find(k);
-    if (iter != m_environs.end()) {
-        return iter->second;
-    }
-    return "";
-}
-
 void quanta_app::load(int argc, const char* argv[]) {
-    //将启动参数转换成环境变量
+    //设置默认参数
+    setenv("QUANTA_SANDBOX", "sandbox", 1);
+    //将启动参数转负责覆盖环境变量
+    const char* lua_conf = nullptr;
     for (int i = 1; i < argc; ++i) {
         std::string argvi = argv[i];
         auto pos = argvi.find("=");
@@ -134,58 +138,31 @@ void quanta_app::load(int argc, const char* argv[]) {
             auto evalue = argvi.substr(pos + 1);
             auto ekey = fmt::format("QUANTA_{}", argvi.substr(2, pos - 2));
             std::transform(ekey.begin(), ekey.end(), ekey.begin(), [](auto c) { return std::toupper(c); });
-            set_environ(ekey, evalue);
+            setenv(ekey.c_str(), evalue.c_str(), 1);
+            continue;
         }
+        if (i == 1) lua_conf = argv[i];
     }
-    //设置默认参数
-    set_environ("QUANTA_INDEX", "1");
-    set_environ("QUANTA_DAEMON", "0");
-    set_environ("QUANTA_ENTRY", argv[1]);
-    set_environ("QUANTA_SERVICE", "quanta");
-    set_environ("QUANTA_SANDBOX", "sandbox");
-    //加载LUA配置
-    luakit::kit_state lua;
-    lua.set("platform", get_platform());
-    lua.set_function("set_env", [&](std::string k, std::string v) { 
-        m_environs[k] = v;
-    });
-    lua.set_function("set_osenv", [&](std::string k, std::string v) {
-        m_environs[k] = v;
-        setenv(k.c_str(), v.c_str(), 1); 
-    });
-    std::string entry = get_environ("QUANTA_ENTRY");
-    lua.run_file(entry, [&](std::string err) {
-        exception_handler("load config err: ", err);
-    });
-    lua.close();
-}
-
-void quanta_app::init_logger() {
-    auto lgetenv = [&](std::string key, std::string def) { 
-        auto value = get_environ(key);
-        return value ? value : def;
-    };
-    std::string index = get_environ("QUANTA_INDEX");
-    std::string service = get_environ("QUANTA_SERVICE");
-    auto logpath = lgetenv("QUANTA_LOG_PATH", "./logs/");
-    auto maxline = std::stoi(lgetenv("QUANTA_LOG_LINE", "100000"));
-    auto rolltype = (logger::rolling_type)std::stoi(lgetenv("QUANTA_LOG_ROLL", "0"));
-    m_logger->option(logpath, service, index, rolltype, maxline);
-    m_logger->add_dest(service);
-    if (std::stoi(lgetenv("QUANTA_DAEMON", "0"))) {
-        quanta_daemon();
+	if (lua_conf) {
+        //加载LUA配置
+        luakit::kit_state lua;
+        lua.set("platform", get_platform());
+        lua.set_function("set_env", lset_env);
+		lua.run_file(lua_conf, [&](std::string err) {
+			exception_handler("load lua config err: ", err);
+		});
+        lua.close();
     }
 }
 
 void quanta_app::run() {
-    init_logger();
     //初始化lua
     luakit::kit_state lua;
     lua.set("platform", get_platform());
     auto quanta = lua.new_table("quanta");
     quanta.set("pid", ::getpid());
-    quanta.set("environs", m_environs);
-    quanta.set("platform", get_platform());
+	quanta.set("platform", get_platform());
+	quanta.set_function("daemon", daemon);
     quanta.set_function("hash_code", hash_code);
     quanta.set_function("get_signal", [&]() { return m_signal; });
     quanta.set_function("set_signal", [&](int n) { set_signal(n); });
@@ -193,13 +170,11 @@ void quanta_app::run() {
     quanta.set_function("ignore_signal", [](int n) { signal(n, SIG_IGN); });
     quanta.set_function("default_signal", [](int n) { signal(n, SIG_DFL); });
     quanta.set_function("register_signal", [](int n) { signal(n, on_signal); });
-    quanta.set_function("getenv", [&](std::string k) { return get_environ(k); });
-    quanta.set_function("setenv", [&](std::string k, std::string v) { m_environs[k] = v; });
 
-    lua.run_script(fmt::format("require '{}'", get_environ("QUANTA_SANDBOX")), [&](std::string err) {
+    lua.run_script(fmt::format("require '{}'", getenv("QUANTA_SANDBOX")), [&](std::string err) {
         exception_handler("load sandbox err: ", err);
     });
-    lua.run_script(fmt::format("require '{}'", get_environ("QUANTA_ENTRY")), [&](std::string err) {
+    lua.run_script(fmt::format("require '{}'", getenv("QUANTA_ENTRY")), [&](std::string err) {
         exception_handler("load entry err: ", err);
     });
     while (quanta.get_function("run")) {
@@ -209,5 +184,4 @@ void quanta_app::run() {
         check_input(lua);
     }
     lua.close();
-    m_logger->stop();
 }

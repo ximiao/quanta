@@ -19,10 +19,6 @@ prop:reader("eval_id", 0)
 prop:reader("perfeval", false)  --性能开关
 prop:reader("eval_list", {})    --协程评估表
 function PerfevalMgr:__init()
-end
-
-function PerfevalMgr:setup()
-    -- 初始化开关
     self.perfeval = env_status("QUANTA_PERFEVAL")
 end
 

@@ -58,7 +58,7 @@ function UpdateMgr:setup()
     self:attach_minute(thread_mgr)
 end
 
-function UpdateMgr:update(now_ms, count)
+function UpdateMgr:update(now_ms)
     --业务更新
     thread_mgr:fork(function()
         local clock_ms, frame = clock_mgr:check(self.frame_id, now_ms)
@@ -66,7 +66,7 @@ function UpdateMgr:update(now_ms, count)
             return
         end
         if clock_ms > HALF_MS then
-            log_warn("[quanta][update] warning clock_ms(%d) too long count(%d)!", clock_ms, count)
+            log_warn("[quanta][update] warning clock_ms(%d) too long!", clock_ms)
         end
         --帧更新
         quanta.frame = frame

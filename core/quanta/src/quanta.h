@@ -18,15 +18,10 @@ public:
     void set_signal(uint32_t n);
 
 protected:
-    void init_logger();
-    std::string get_environ(std::string k);
-    void set_environ(std::string k, std::string v);
     void exception_handler(std::string msg, std::string& err);
 
 private:
     uint64_t m_signal = 0;
-    environ_map m_environs;
-
     std::shared_ptr<log_service> m_logger;
 };
 

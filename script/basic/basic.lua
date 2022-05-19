@@ -14,11 +14,7 @@ import("constant.lua")
 import("basic/math.lua")
 import("basic/table.lua")
 import("basic/string.lua")
-import("basic/logger.lua")
-import("basic/console.lua")
 import("basic/listener.lua")
-import("basic/signal.lua")
-import("basic/environ.lua")
 
 local log_err       = logger.err
 local sformat       = string.format

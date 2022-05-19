@@ -16,6 +16,14 @@ KernCode.MYSQL_FAILED       = 102   --MYSQL执行失败
 KernCode.MONGO_FAILED       = 103   --MONGO执行失败
 KernCode.REDIS_FAILED       = 104   --REDIS执行失败
 
+--服务模式
+local QuantaMode = enum("QuantaMode", 0)
+QuantaMode.STANDLONE        = 0     --独立模式(不加载lua框架,此处仅列举,配置无效)
+QuantaMode.ROUTER           = 1     --路由模式(加载路由)
+QuantaMode.TINY             = 2     --精简模式(加载基础)
+QuantaMode.TOOL             = 3     --工具模式(加载基础和网络)
+QuantaMode.SERVICE          = 4     --服务模式(加载全量)
+
 --协议投flag掩码
 local FlagMask              = enum("FlagMask", 0)
 FlagMask.REQ                = 0x01  -- 请求
