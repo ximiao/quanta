@@ -9,11 +9,6 @@ local ltime         = ltimer.time
 
 local QuantaMode    = enum("QuantaMode")
 
---初始化gm
-local function init_gm()
-    import("agent/gm_agent.lua")
-end
-
 --初始化网络
 local function init_network()
     local lbus = require("luabus")
@@ -26,6 +21,7 @@ end
 local function init_router()
     import("kernel/router_mgr.lua")
     import("driver/webhook.lua")
+    import("agent/gm_agent.lua")
 end
 
 --初始化loop
@@ -61,7 +57,6 @@ function quanta.init()
             import("agent/monitor_agent.lua")
             import("kernel/netlog_mgr.lua")
         end
-        init_gm()
     end
 end
 
