@@ -67,16 +67,14 @@ end
 
 --启动
 function quanta.startup(entry)
-    local now_ms, clock_ms = ltime()
     quanta.now = 0
     quanta.frame = 0
-    quanta.now_ms = now_ms
-    quanta.clock_ms = clock_ms
     quanta.yield = coroutine.yield
     quanta.resume = coroutine.resume
     quanta.running = coroutine.running
+    quanta.now_ms, quanta.clock_ms = ltime()
     --初始化随机种子
-    math.randomseed(clock_ms)
+    math.randomseed(quanta.now_ms)
     --初始化quanta
     quanta.init()
     --启动服务器

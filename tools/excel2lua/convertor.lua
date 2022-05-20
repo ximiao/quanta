@@ -268,7 +268,7 @@ local function export_config()
     return input, output
 end
 
-print("useage: quanta.exe [--input=xxx] [--output=xxx]")
+print("useage: quanta.exe [--entry=convertor] [--input=xxx] [--output=xxx]")
 print("begin export excels to lua!")
 local input, output = export_config()
 local ok, err = pcall(export_excel, input, output)
