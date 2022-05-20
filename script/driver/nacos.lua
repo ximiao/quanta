@@ -105,7 +105,7 @@ function Nacos:listen_config(data_id, group, on_changed)
             if res and #res > 0 then
                 local value = self:get_config(data_id, rgroup)
                 if value then
-                    md5 = lmd5(value, true)
+                    md5 = lmd5(value, 1)
                     on_changed(data_id, rgroup, value)
                 end
             end

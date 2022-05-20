@@ -17,9 +17,8 @@
 --service_name: 服务名      lobby
 --service_nick: 服务别名    lobby.1
 
-local tonumber      = tonumber
-local ssub          = string.sub
-local sfind         = string.find
+import("kernel/config_mgr.lua")
+
 local sformat       = string.format
 
 local config_mgr    = quanta.get("config_mgr")
@@ -36,19 +35,18 @@ function service.init()
         SERVICES[conf.name] = conf.id
     end
     --初始化服务信息
-    local name = env_get("QUANTA_SERVICE")
-    local index = env_number("QUANTA_INDEX", 1)
+    local name = environ.get("QUANTA_SERVICE")
+    local index = environ.number("QUANTA_INDEX", 1)
     local service_id = service.make_sid(name, index)
-    assert(service_id, "service_id not exist, quanta startup failed!")
     quanta.index = index
-    quanta.group = env_number("QUANTA_GROUP", 1)
-    quanta.region = env_number("QUANTA_REGION", 1)
-    quanta.id = service.make_sid(service, index)
+    quanta.group = environ.number("QUANTA_GROUP", 1)
+    quanta.region = environ.number("QUANTA_REGION", 1)
+    quanta.id = service.make_id(name, index)
     quanta.service_name = name
     quanta.service_id = service_id
     quanta.service = SERVICES[service]
     quanta.name = sformat("%s_%s", name, index)
-    quanta.deploy = env_get("QUANTA_DEPLOY", "develop")
+    quanta.deploy = environ.get("QUANTA_DEPLOY", "develop")
 end
 
 --生成节点id

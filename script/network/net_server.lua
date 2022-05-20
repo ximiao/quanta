@@ -76,7 +76,7 @@ function NetServer:on_socket_accept(session)
     -- 流控配置
     session.fc_packet = 0
     session.fc_bytes  = 0
-    session.last_fc_time = quanta.now_ms
+    session.last_fc_time = quanta.clock_ms
     -- 设置超时(心跳)
     session.set_timeout(NETWORK_TIMEOUT)
     -- 绑定call回调
@@ -199,15 +199,15 @@ end
 
 -- 收到远程调用回调
 function NetServer:on_socket_recv(session, cmd_id, flag, session_id, data)
-    local now_ms = quanta.now_ms
+    local clock_ms = quanta.clock_ms
     local cmd_cd_time = self:get_cmd_cd(cmd_id)
     local command_times = session.command_times
-    if command_times[cmd_id] and now_ms - command_times[cmd_id] < cmd_cd_time then
+    if command_times[cmd_id] and clock_ms - command_times[cmd_id] < cmd_cd_time then
         log_warn("[NetServer][on_socket_recv] session trigger cmd(%s) cd ctrl, will be drop.", cmd_id)
         --协议CD
         return
     end
-    command_times[cmd_id] = now_ms
+    command_times[cmd_id] = clock_ms
     session.alive_time = quanta.now
     -- 解码
     local body, cmd_name = self:decode(cmd_id, data, flag)
@@ -241,7 +241,7 @@ function NetServer:check_serial(session, cserial)
     -- 流量控制检测
     if flow_ctrl then
         -- 达到检测周期
-        local cur_time = quanta.now_ms
+        local cur_time = quanta.clock_ms
         local escape_time = cur_time - session.last_fc_time
         -- 检查是否超过配置
         if session.fc_packet / escape_time > fc_package or session.fc_bytes / escape_time > fc_bytes then

@@ -19,10 +19,10 @@ KernCode.REDIS_FAILED       = 104   --REDIS执行失败
 --服务模式
 local QuantaMode = enum("QuantaMode", 0)
 QuantaMode.STANDLONE        = 0     --独立模式(不加载lua框架,此处仅列举,配置无效)
-QuantaMode.ROUTER           = 1     --路由模式(加载路由)
-QuantaMode.TINY             = 2     --精简模式(加载基础)
-QuantaMode.TOOL             = 3     --工具模式(加载基础和网络)
-QuantaMode.SERVICE          = 4     --服务模式(加载全量)
+QuantaMode.SERVICE          = 1     --服务模式(加载全量)
+QuantaMode.TOOL             = 2     --工具模式(加载基础和网络)
+QuantaMode.TINY             = 3     --精简模式(加载基础)
+QuantaMode.ROUTER           = 4     --路由模式(加载路由)
 
 --协议投flag掩码
 local FlagMask              = enum("FlagMask", 0)

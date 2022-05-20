@@ -89,12 +89,9 @@ static int hash_code(lua_State* L) {
 }
 
 static int lset_env(lua_State* L) {
-    int overwrite = 0;
     const char* key = lua_tostring(L, 1);
     const char* value = lua_tostring(L, 2);
-    if (lua_gettop(L) > 2) {
-        overwrite = lua_tointeger(L, 3);
-    }
+    int overwrite = luaL_optinteger(L, 3, 0);
     setenv(key, value, overwrite);
     return 0;
 }
@@ -179,7 +176,7 @@ void quanta_app::run() {
     });
     while (quanta.get_function("run")) {
         quanta.call([&](std::string err) {
-            exception_handler("quanta run err: ", err);
+            LOG_FATAL(m_logger) << "quanta run err: " << err;
         });
         check_input(lua);
     }

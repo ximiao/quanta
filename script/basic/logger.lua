@@ -21,7 +21,6 @@ logfeature = {}
 
 function logger.init()
     --配置日志信息
-    local daemon = environ.status("QUANTA_DAEMON")
     local service, index = quanta.service, quanta.index
     local path = environ.get("QUANTA_LOG_PATH", "./logs/")
     local rolltype = environ.number("QUANTA_LOG_ROLL", 0)
@@ -33,10 +32,7 @@ function logger.init()
     driver.add_dest(service);
     driver.add_lvl_dest(LOG_LEVEL.ERROR)
     --设置daemon
-    driver.daemon(daemon)
-    if daemon then
-        quanta.daemon()
-    end
+    driver.daemon(environ.status("QUANTA_DAEMON"))
     --graylog
     local logaddr = environ.get("QUANTA_GRAYLOG_ADDR")
     if logaddr then
@@ -47,10 +43,6 @@ end
 
 function logger.daemon(daemon)
     driver.daemon(daemon)
-end
-
-function logger.setup_graylog()
-    
 end
 
 function logger.feature(name)
