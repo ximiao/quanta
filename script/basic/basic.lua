@@ -73,6 +73,8 @@ local function qenum(ename, ekey)
     return eval
 end
 
+quanta.enum     = qenum
+
 local SUCCESS   = qenum("KernCode", "SUCCESS")
 local DAY_S     = qenum("PeriodTime", "DAY_S")
 local HOUR_S    = qenum("PeriodTime", "HOUR_S")
@@ -87,7 +89,7 @@ end
 
 --获取utc时间戳
 local utc_diff_time = nil
-local function utc_time(time)
+function quanta.utc_time(time)
     if not time or time <= 0 then
         time = quanta.now
     end
@@ -100,7 +102,7 @@ local function utc_time(time)
 end
 
 --获取一个类型的时间版本号
-local function edition(period, time, offset)
+function quanta.edition(period, time, offset)
     local edition = 0
     if not time or time <= 0 then
         time = quanta.now
@@ -122,13 +124,7 @@ local function edition(period, time, offset)
 end
 
 --获取UTC的时间版本号
-local function edition_utc(period, time, offset)
-    local utime = utc_time(time)
-    return edition(period, utime, offset)
+function quanta.edition_utc(period, time, offset)
+    local utime = quanta.utc_time(time)
+    return quanta.edition(period, utime, offset)
 end
-
---导出
-quanta.enum         = qenum
-quanta.edition      = edition
-quanta.utc_time     = utc_time
-quanta.edition_utc  = edition_utc

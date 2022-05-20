@@ -4,7 +4,6 @@ local ltimer = require("ltimer")
 
 local socket_mgr    = nil
 local update_mgr    = nil
-local qxpcall       = quanta.xpcall
 local ltime         = ltimer.time
 
 local QuantaMode    = enum("QuantaMode")

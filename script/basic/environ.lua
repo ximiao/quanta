@@ -1,5 +1,4 @@
 --environ.lua
-local pairs     = pairs
 local tonumber  = tonumber
 local ogetenv   = os.getenv
 local tunpack   = table.unpack

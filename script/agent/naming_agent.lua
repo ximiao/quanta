@@ -1,9 +1,9 @@
 --naming_agent.lua
 import("driver/nacos.lua")
 
-local qget      = quanta.get
+--local qget      = quanta.get
 
-local nacos     = qget("nacos")
+--local nacos     = qget("nacos")
 
 local NamingAgent = singleton()
 function NamingAgent:__init()
