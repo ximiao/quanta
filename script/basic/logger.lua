@@ -21,15 +21,15 @@ logfeature = {}
 
 function logger.init()
     --配置日志信息
-    local service, index = quanta.service, quanta.index
+    local service_name, index = quanta.service_name, quanta.index
     local path = environ.get("QUANTA_LOG_PATH", "./logs/")
     local rolltype = environ.number("QUANTA_LOG_ROLL", 0)
     local maxline = environ.number("QUANTA_LOG_LINE", 100000)
-    driver.option(path, service, index, rolltype, maxline);
+    driver.option(path, service_name, index, rolltype, maxline);
     --设置日志过滤
     logger.filter(environ.number("QUANTA_LOG_LVL"))
     --添加输出目标
-    driver.add_dest(service);
+    driver.add_dest(service_name);
     driver.add_lvl_dest(LOG_LEVEL.ERROR)
     --设置daemon
     driver.daemon(environ.status("QUANTA_DAEMON"))
