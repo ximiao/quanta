@@ -159,7 +159,7 @@ void quanta_app::run() {
     quanta.set("pid", ::getpid());
 	quanta.set("platform", get_platform());
     quanta.set_function("hash_code", hash_code);
-	quanta.set_function("daemon", [&]() { daemon; });
+	quanta.set_function("daemon", [&]() { daemon(); });
     quanta.set_function("get_signal", [&]() { return m_signal; });
     quanta.set_function("set_signal", [&](int n) { set_signal(n); });
     quanta.set_function("get_logger", [&]() { return m_logger.get(); });
