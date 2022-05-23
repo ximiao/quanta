@@ -25,6 +25,9 @@ local ogetenv       = os.getenv
 
 --指定导出函数
 local export_method = nil
+--类型定义行，默认2
+local type_line     = 2
+
 
 --设置utf8
 if quanta.platform == "linux" then
@@ -187,8 +190,8 @@ local function export_sheet_to_table(sheet, output, title, dim)
     local header     = {}
     local field_type = {}
     for col = dim.firstCol, dim.lastCol do
-        -- 读取第二行服务器类型列，作为服务器筛选条件
-        field_type[col] = get_sheet_value(sheet, 2, col)
+        -- 读取类型行，作为筛选条件
+        field_type[col] = get_sheet_value(sheet, type_line, col)
         -- 读取第四行作为表头
         header[col] = get_sheet_value(sheet, 4, col)
     end
@@ -266,19 +269,16 @@ local function export_excel(input, output)
             end
             --只导出sheet1
             local sheets = workbook:sheets()
-            local sheet = sheets and sheets[1]
-            if not sheet then
-                print(sformat("export excel %s open sheet %d failed!", file, 0))
-                break
+            for _, sheet in pairs(sheets) do
+                local dim = sheet:dimension()
+                local sheet_name = sheet:name()
+                if dim.lastRow < 4 or dim.lastCol <= 0 then
+                    print(sformat("export excel %s sheet %s empty!", file, sheet_name))
+                else
+                    local title = slower(sheet_name)
+                    export_sheet_to_table(sheet, output, title, dim)
+                end
             end
-            local dim = sheet:dimension()
-            local sheet_name = sheet:name()
-            if dim.lastRow < 4 or dim.lastCol <= 0 then
-                print(sformat("export excel %s sheet %s empty!", file, sheet_name))
-                break
-            end
-            local title = slower(sheet_name)
-            export_sheet_to_table(sheet, output, title, dim)
         end
         :: continue ::
     end
@@ -302,6 +302,10 @@ local function export_config()
     else
         output = lappend(output, env_output)
         lmkdir(output)
+    end
+    local env_typline = ogetenv("QUANTA_TYPLINE")
+    if env_typline then
+        type_line = mtointeger(env_typline)
     end
     local env_format = ogetenv("QUANTA_FORMAT")
     export_method = export_records_to_struct

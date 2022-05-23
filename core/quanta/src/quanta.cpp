@@ -37,7 +37,7 @@ static const char* get_platform() {
 #endif
 }
 
-static int daemon() {
+static void daemon() {
 #if defined(__linux) || defined(__APPLE__)
     pid_t pid = fork();
     if (pid != 0)
@@ -52,7 +52,6 @@ static int daemon() {
         close(null);
     }
 #endif
-    return 0;
 }
 
 static void check_input(luakit::kit_state& lua) {
@@ -159,8 +158,8 @@ void quanta_app::run() {
     auto quanta = lua.new_table("quanta");
     quanta.set("pid", ::getpid());
 	quanta.set("platform", get_platform());
-	quanta.set_function("daemon", daemon);
     quanta.set_function("hash_code", hash_code);
+	quanta.set_function("daemon", [&]() { daemon; });
     quanta.set_function("get_signal", [&]() { return m_signal; });
     quanta.set_function("set_signal", [&](int n) { set_signal(n); });
     quanta.set_function("get_logger", [&]() { return m_logger.get(); });
