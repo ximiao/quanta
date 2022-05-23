@@ -5,9 +5,6 @@
 local config_mgr = quanta.get("config_mgr")
 local database = config_mgr:get_table("database")
 
---导出版本号
-database:set_version(10000)
-
 --导出配置内容
 database:upsert({
     quanta_deploy = 'publish',
@@ -107,3 +104,5 @@ database:upsert({
     passwd = '123456',
     port = 9004,
 })
+
+database:set_version('08596bb35016e83f849fa228d157f888')

@@ -1,4 +1,5 @@
 --convertor.lua
+local lcrypt    = require('lcrypt')
 local lstdfs    = require('lstdfs')
 local lexcel    = require('luaxlsx')
 
@@ -12,6 +13,7 @@ local lappend       = lstdfs.append
 local lconcat       = lstdfs.concat
 local lfilename     = lstdfs.filename
 local lcurdir       = lstdfs.current_path
+local lmd5          = lcrypt.md5
 local sfind         = string.find
 local sgsub         = string.gsub
 local sformat       = string.format
@@ -21,7 +23,8 @@ local mtointeger    = math.tointeger
 local slower        = string.lower
 local ogetenv       = os.getenv
 
-local version       = 10000
+--指定导出函数
+local export_method = nil
 
 --设置utf8
 if quanta.platform == "linux" then
@@ -103,7 +106,8 @@ local function get_sheet_value(sheet, row, col, field_type, header)
 end
 
 --导出到lua
-local function export_records_to_lua(output, title, records)
+--使用configmgr结构
+local function export_records_to_struct(output, title, records)
     local table_name = sformat("%s_cfg", title)
     local filename = lappend(output, lconcat(table_name, ".lua"))
     local export_file = iopen(filename, "w")
@@ -116,7 +120,6 @@ local function export_records_to_lua(output, title, records)
     lines[#lines + 1] = "--luacheck: ignore 631\n"
     lines[#lines + 1] = '--获取配置表\nlocal config_mgr = quanta.get("config_mgr")'
     lines[#lines + 1] = sformat('local %s = config_mgr:get_table("%s")\n', title, title)
-    lines[#lines + 1] = sformat("--导出版本号\n%s:set_version(%s)\n", title, version)
 
     lines[#lines + 1] = "--导出配置内容"
     for _, record in pairs(records) do
@@ -136,12 +139,48 @@ local function export_records_to_lua(output, title, records)
 
     local output_data = tconcat(lines, "\n")
     export_file:write(output_data)
+    export_file:write(sformat("\n%s:set_version('%s')", title, lmd5(output_data, 1)))
     export_file:close()
     print(sformat("export %s success!", filename))
 end
 
---指定导出函数
-local export_method = export_records_to_lua
+--导出到lua
+--使用luatable
+local function export_records_to_table(output, title, records)
+    local table_name = sformat("%s_cfg", title)
+    local filename = lappend(output, lconcat(table_name, ".lua"))
+    local export_file = iopen(filename, "w")
+    if not export_file then
+        print(sformat("open output file %s failed!", filename))
+        return
+    end
+    local lines = {}
+    lines[#lines + 1] = sformat("--%s.lua", table_name)
+    lines[#lines + 1] = "--luacheck: ignore 631\n"
+
+    lines[#lines + 1] = "--导出配置内容"
+    lines[#lines + 1] = sformat('local %s = {', title)
+    for _, record in pairs(records) do
+        for index, info in ipairs(record) do
+            local key, value, ftype = tunpack(info)
+            if index == 1 then
+                lines[#lines + 1] =  "    {"
+            end
+            if type(value) == "string" and ftype ~= "array" then
+                value = "'" .. value .. "'"
+                value = sgsub(value, "\n", "\\n")
+            end
+            lines[#lines + 1] = sformat("        %s = %s,", key, tostring(value))
+        end
+        lines[#lines + 1] = "    },"
+    end
+    lines[#lines + 1] = sformat('}\n\nreturn %s\n', title)
+
+    local output_data = tconcat(lines, "\n")
+    export_file:write(output_data)
+    export_file:close()
+    print(sformat("export %s success!", filename))
+end
 
 --导出到lua table
 local function export_sheet_to_table(sheet, output, title, dim)
@@ -210,6 +249,9 @@ local function export_excel(input, output)
     for _, file in pairs(files) do
         local fullname = file.name
         if file.type == "directory" then
+            if fullname == output then
+                goto continue
+            end
             local fname = lfilename(fullname)
             local soutput = lappend(output, fname)
             lmkdir(soutput)
@@ -261,9 +303,10 @@ local function export_config()
         output = lappend(output, env_output)
         lmkdir(output)
     end
-    local env_version = ogetenv("QUANTA_VERSION")
-    if env_version then
-        version = conv_integer(env_version)
+    local env_format = ogetenv("QUANTA_FORMAT")
+    export_method = export_records_to_struct
+    if env_format and env_format == "table" then
+        export_method = export_records_to_table
     end
     return input, output
 end

@@ -5,9 +5,6 @@
 local config_mgr = quanta.get("config_mgr")
 local service = config_mgr:get_table("service")
 
---导出版本号
-service:set_version(10000)
-
 --导出配置内容
 service:upsert({
     id = 1,
@@ -92,3 +89,5 @@ service:upsert({
     router = true,
     hash = 0,
 })
+
+service:set_version('85d04274ddb8dade76a33052cf7f3110')

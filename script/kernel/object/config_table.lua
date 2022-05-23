@@ -15,7 +15,7 @@ prop:reader("name", nil)
 prop:reader("rows", {})
 prop:reader("indexs", {})
 prop:reader("count", 0)
-prop:accessor("version", 0)
+prop:accessor("version", "")
 
 -- 初始化一个配置表，indexs最多支持三个
 function ConfigTable:__init()

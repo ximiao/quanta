@@ -5,9 +5,6 @@
 local config_mgr = quanta.get("config_mgr")
 local router = config_mgr:get_table("router")
 
---导出版本号
-router:set_version(10000)
-
 --导出配置内容
 router:upsert({
     quanta_deploy = 'publish',
@@ -32,3 +29,5 @@ router:upsert({
     count = 1,
     port = 9001,
 })
+
+router:set_version('b71cf6b9ecefa118767e759443d4c83a')
