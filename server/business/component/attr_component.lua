@@ -122,7 +122,6 @@ function AttrComponent:on_attr_changed(attr_id, attr, value, service_id)
         --转发判定
         if self.relayable then
             self.relay_attrs[attr_id] = { value, service_id }
-            log_warn("[AttrComponent][on_attr_changed] relay_attrs={}", self.relay_attrs)
             event_mgr:publish_frame(self, "on_attr_relay")
         end
         --同步属性
