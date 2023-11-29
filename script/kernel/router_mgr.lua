@@ -62,9 +62,7 @@ function RouterMgr:add_router(router_id, host, port)
         return
     end
     local RpcClient = import("network/rpc_client.lua")
-    local client = RpcClient(self, host, port)
-    client:set_id(router_id)
-    self.routers[router_id] = client
+    self.routers[router_id] = RpcClient(self, host, port, router_id)
 end
 
 --错误处理
