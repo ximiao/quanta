@@ -21,6 +21,7 @@ local CONNECT_TIMEOUT   = quanta.enum("NetwkTime", "CONNECT_TIMEOUT")
 
 local RpcClient = class()
 local prop = property(RpcClient)
+prop:reader("id", 0)
 prop:reader("ip", nil)
 prop:reader("port", nil)
 prop:reader("alive", false)
