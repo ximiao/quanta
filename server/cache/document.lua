@@ -105,7 +105,6 @@ end
 function Document:update()
     self.flushing = false
     --存储DB
-    self:check_primary(self.datas, self.primary_key)
     local selector = { [self.primary_key] = self.primary_id }
     local code, res = mongo_mgr:update(self.primary_id, self.coll_name, self.datas, selector, true)
     if qfailed(code) then
@@ -128,8 +127,9 @@ end
 
 function Document:update_data(datas, flush)
     --合并数据
-    qmerge(self.datas, datas, "null")
     qmerge(self.increases, datas)
+    qmerge(self.datas, datas, "null")
+    self:check_primary(self.datas, self.primary_key)
     --提交数据库
     if self.flushing then
         return
