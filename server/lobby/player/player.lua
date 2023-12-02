@@ -166,7 +166,6 @@ end
 function Player:offline()
     self.status = ONL_OFFLINE
     self.active_time = quanta.now_ms
-    self.load_success = false
     --invoke
     self:invoke("_offline")
     log_warn("[Player][offline] player({}) is offline!", self.id)
@@ -176,7 +175,6 @@ function Player:relive()
     self.release = false
     self.status = ONL_INLINE
     self.active_time = quanta.now_ms
-    self.load_success = true
     --invoke
     self:invoke("_relive")
     log_warn("[Player][relive] player({}) is relive!", self.id)
